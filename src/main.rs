@@ -7,8 +7,6 @@ mod breaker;
 mod drawer;
 mod phys;
 
-const QUIT_KEY: KeyCode = KeyCode::Char('q');
-
 fn main() {
     let mut game = breaker::Game::new(crossterm::terminal::size().unwrap());
     let mut drawer = Drawer::new(stdout());
@@ -21,14 +19,9 @@ fn main() {
         let mut pressed_key: Option<KeyCode> = Option::None;
         if poll(Duration::from_millis(10)).unwrap() {
             match read().unwrap() {
-                Event::Key(event) => {
-                    match event.code {
-                        // Some special keys are handled here
-                        QUIT_KEY => break,
-                        // All others pass to the game itself
-                        _ => pressed_key = Option::Some(event.code),
-                    }
-                }
+                Event::Key(event) => match event.code {
+                    _ => pressed_key = Option::Some(event.code),
+                },
                 // We don't really care about mouse or resize events... for now
                 _ => {}
             }

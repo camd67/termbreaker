@@ -1,4 +1,4 @@
-use std::ops::Add;
+use crossterm::style;
 
 /// An entity that can be moved by the player
 pub struct PlayerEntity {
@@ -15,9 +15,11 @@ impl PlayerEntity {
 }
 
 /// An entity that won't move ever
+#[derive(Debug)]
 pub struct StaticEntity {
     pub collider: Square,
     pub alive: bool,
+    pub color: style::Color,
 }
 
 /// An entity that moves, but on it's own accord
@@ -49,7 +51,7 @@ pub struct Size {
     pub h: u16,
 }
 
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, Debug)]
 /// A square with a top left point and width + height
 pub struct Square {
     pub x: u16,
@@ -58,7 +60,47 @@ pub struct Square {
     pub h: u16,
 }
 
+pub enum Direction {
+    UP,
+    RIGHT,
+    DOWN,
+    LEFT,
+}
+
 impl Square {
+    pub fn collides_with(&self, other: &Square) -> bool {
+        return self.x < other.x + other.w
+            && self.x + self.w > other.x
+            && self.y < other.y + other.h
+            && self.y + self.h > other.y;
+    }
+
+    pub fn get_center(&self) -> Vec2d {
+        Vec2d {
+            x: (self.x + self.w / 2) as i16,
+            y: (self.y + self.y / 2) as i16,
+        }
+    }
+
+    pub fn get_collision_direction(&self, other: &Square) -> Direction {
+        let self_center = self.get_center();
+        let other_center = other.get_center();
+        let dy = (self_center.y - other_center.y) as f64;
+        let dx = (self_center.x - other_center.x) as f64;
+        // add pi/8 onto our angle, that way our comparisons below are on even angles rather than partial angles
+        // This turns our comparisons on 45deg angles into comparisons on 90deg angles (but in radians)
+        let angle = dy.atan2(dx) + std::f64::consts::FRAC_PI_8;
+        if angle < std::f64::consts::FRAC_PI_4 {
+            return Direction::RIGHT;
+        } else if angle < std::f64::consts::FRAC_PI_2 {
+            return Direction::UP;
+        } else if angle < std::f64::consts::FRAC_PI_4 * 3.0 {
+            return Direction::LEFT;
+        } else {
+            return Direction::DOWN;
+        }
+    }
+
     pub fn move_y(&mut self, y: i16) {
         if y == 0 {
             return;

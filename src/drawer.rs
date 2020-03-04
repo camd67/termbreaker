@@ -56,7 +56,7 @@ where
     /// - Moving the cursor to the top left
     /// - Resetting the color
     pub fn reset_screen(&mut self) {
-        queue!(
+        execute!(
             self.w,
             style::ResetColor,
             terminal::Clear(terminal::ClearType::All),
